@@ -1,18 +1,20 @@
 package main
 
-type lexer struct {
-	name  string
-	input string
-	start int
-	pos   int
-	width int
-	items chan Item
+type Lexer struct {
+	Input     string
+	Start     int
+	Cur       int
+	Width     int
+	LastToken string
+	// output chan
 }
 
-type stateFn func(*lexer) stateFn
-
-func Run() {
-	for state := startState; state != nil; {
-		state = state(lexer)
+// TODO: Rename
+func NewLexer(input string) (*Lexer, error) {
+	l := &Lexer{
+		Input: input,
 	}
+
+	// call go run()
+	return l, nil
 }
