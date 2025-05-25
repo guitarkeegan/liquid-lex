@@ -11,7 +11,7 @@ type stateFn func(*Lexer) stateFn
 
 func lexRightCodeInput(l *Lexer) stateFn {
 	l.Cur += len(rightCodeInput)
-	l.Emit(itemRightCurly)
+	l.Emit(itemRightCodeInput)
 	return lexText
 }
 
@@ -23,30 +23,46 @@ func isLetter(r rune) bool {
 	return false
 }
 
+func lexOperator(l *Lexer) stateFn {
+
+	l.AcceptRun("=!><")
+	op := l.Input[l.Start:l.Cur]
+	if item, ok := l.OpMap[op]; ok {
+		l.Emit(item)
+		return lexInsideOutput
+	}
+
+	return l.errorf("lexOperator: op %q not found in OpMap", op)
+
+}
+
+// accept run to get the word, then check agains a map
 func lexKeyword(l *Lexer) stateFn {
 
 	dbg("lexKeyword")
 
-	// TODO: would a trie work well here?
-	if strings.HasPrefix(l.Input[l.Cur:], comment) {
-		l.Cur += len(comment)
-		l.Emit(itemComment)
-		return lexInsideOutput
-	}
-	if strings.HasPrefix(l.Input[l.Cur:], endcomment) {
-		l.Cur += len(endcomment)
-		l.Emit(itemEndComment)
+	l.AcceptRun(lowercaseAlph)
+	// should be at end of keyword
+
+	word := l.Input[l.Start:l.Cur]
+	if itemType, ok := l.KeywordMap[word]; ok {
+		l.Emit(itemType)
 		return lexInsideOutput
 	}
 
-	return l.errorf("lexKeyword: unknown keyword: %.10q..., is not a known keyword", l.Input[l.Cur:])
+	// check for var
+	if l.LastItem.Typ == itemAssign {
+		l.Emit(itemVar)
+		return lexOperator
+	}
+
+	return l.errorf("lexKeyword: unknown keyword: %.10q..., is not a known keyword", word)
 }
 
 func lexInsideOutput(l *Lexer) stateFn {
 	for {
 		if strings.HasPrefix(l.Input[l.Cur:], rightCodeInput) {
-			// TODO: need to know if keyword was found...
-			if l.LastToken == leftCodeInput {
+			if l.LastItem.Val == leftCodeInput {
 				return l.errorf("empty output: %s %s must not be empty", leftCodeInput, rightCodeInput)
 			}
 			dbg("  lexInsideOutput: rightCodeInput")
@@ -63,13 +79,16 @@ func lexInsideOutput(l *Lexer) stateFn {
 			dbg("  lexInsideOutput: isLetter")
 			l.Backup()
 			return lexKeyword
+		case isOperator(r):
+			return lexOperator
+			// TODO: isString
 		}
 	}
 }
 
 func lexLeftCodeInput(l *Lexer) stateFn {
 	l.Cur += len(leftCodeInput)
-	l.Emit(itemLeftCurly)
+	l.Emit(itemLeftCodeInput)
 	return lexInsideOutput
 }
 

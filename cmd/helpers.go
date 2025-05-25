@@ -72,6 +72,17 @@ func isSpace(r rune) bool {
 func (l *Lexer) Emit(it ItemType) {
 	// TODO send to chan
 	log.Infof("Emit: %+v", Item{it, l.Input[l.Start:l.Cur]})
-	l.LastToken = l.Input[l.Start:l.Cur]
+	l.LastItem.Val = l.Input[l.Start:l.Cur]
+	l.LastItem.Typ = it
 	l.Start = l.Cur
+}
+
+func isOperator(r rune) bool {
+	runeArr := [4]rune{'=', '>', '<', '!'}
+	for _, rn := range runeArr {
+		if rn == r {
+			return true
+		}
+	}
+	return false
 }

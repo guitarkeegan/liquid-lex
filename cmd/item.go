@@ -6,11 +6,62 @@ type ItemType int
 
 const (
 	// tags
-	itemLeftCurly ItemType = iota
-	itemRightCurly
-	// keywords
+	itemLeftCodeInput ItemType = iota
+	itemRightCodeInput
+
+	// opening tag keywords
+	itemCycle
+	itemRender
+	itemRaw
 	itemComment
+	itemIncrement
+	itemUnless
+	itemDecrement
+	itemCapture
+	itemContinue
+	itemInclude
+	itemCase
+	itemIfchanged
+	itemAssign
+	itemFor
+	itemBreak
+	itemIf
+	itemEcho
+	itemTablerow
+	itemDoc
+	itemLiquid
+
+	// closing tag keywords
+	itemEndraw
 	itemEndComment
+	itemEndunless
+	itemEndcapture
+	itemEndcase
+	itemEndfor
+	itemEndif
+	itemEndtablerow
+	itemEndifchanged
+
+	// case/conditional keywords
+	itemWhen
+	itemElse
+	itemElsif
+	itemElseif
+	itemLogicalOr
+	itemLogicalAnd
+	itemContains
+
+	itemEquals
+	itemAssignEquals
+	itemDoesNotEqual
+	itemGreaterThan
+	itemLessThan
+	itemGreaterThanOrEqualTo
+	itemLessThanOrEqualTo
+
+	// outside of map
+	itemVar // escape hatch for vars
+
 	// end of file
 	itemEOF
 	itemError
