@@ -2,11 +2,19 @@ package main
 
 const (
 	lowercaseAlph = "abcdefghijklmnopqrstuvwxyz"
+	uppercaseAlph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	digits        = "0123456789"
+	letters       = lowercaseAlph + uppercaseAlph
+	alphanumeric  = letters + digits
+	punctuation   = "!#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+	whitespace    = " \t\n\r\f\v"
 )
 
 const (
 	leftCodeInput       = "{%"
 	rightCodeInput      = "%}"
+	leftOutput          = "{{"
+	rightOutput         = "}}"
 	eof            rune = -1
 )
 

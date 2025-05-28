@@ -29,7 +29,7 @@ func lexOperator(l *Lexer) stateFn {
 	op := l.Input[l.Start:l.Cur]
 	if item, ok := l.OpMap[op]; ok {
 		l.Emit(item)
-		return lexInsideOutput
+		return lexInsideCodeInput
 	}
 
 	return l.errorf("lexOperator: op %q not found in OpMap", op)
@@ -47,38 +47,60 @@ func lexKeyword(l *Lexer) stateFn {
 	word := l.Input[l.Start:l.Cur]
 	if itemType, ok := l.KeywordMap[word]; ok {
 		l.Emit(itemType)
-		return lexInsideOutput
+		return lexInsideCodeInput
 	}
 
 	// check for var
 	if l.LastItem.Typ == itemAssign {
 		l.Emit(itemVar)
-		return lexOperator
+		return lexInsideCodeInput
 	}
 
 	return l.errorf("lexKeyword: unknown keyword: %.10q..., is not a known keyword", word)
 }
 
-func lexInsideOutput(l *Lexer) stateFn {
+func lexString(l *Lexer) stateFn {
+	l.AcceptRun(alphanumeric + punctuation + whitespace)
+	if l.Input[l.Cur] == '"' {
+		l.Next()
+	} else {
+		l.errorf("lexString: did not end with '\"' token")
+	}
+	l.Emit(itemString)
+	return lexInsideCodeInput
+}
+
+// TODO: just int for now
+func lexNumber(l *Lexer) stateFn {
+	l.AcceptRun(digits)
+	l.Emit(itemNumber)
+	return lexInsideCodeInput
+}
+
+func lexInsideCodeInput(l *Lexer) stateFn {
 	for {
 		if strings.HasPrefix(l.Input[l.Cur:], rightCodeInput) {
 			if l.LastItem.Val == leftCodeInput {
 				return l.errorf("empty output: %s %s must not be empty", leftCodeInput, rightCodeInput)
 			}
-			dbg("  lexInsideOutput: rightCodeInput")
+			dbg("  lexInsideCodeInput: rightCodeInput")
 			return lexRightCodeInput
 		}
 		switch r := l.Next(); {
 		case r == eof:
 			return l.errorf("EOF: unclosed output: %q must have a closing tag: %q", leftCodeInput, rightCodeInput)
 		case isSpace(r):
-			dbg("  lexInsideOutput: isSpace")
+			dbg("  lexInsideCodeInput: isSpace")
 			l.Ignore()
 		case isLetter(r):
 			// check keywords
-			dbg("  lexInsideOutput: isLetter")
+			dbg("  lexInsideCodeInput: isLetter")
 			l.Backup()
 			return lexKeyword
+		case isString(r):
+			return lexString
+		case isNumber(r):
+			return lexNumber
 		case isOperator(r):
 			return lexOperator
 			// TODO: isString
@@ -86,10 +108,52 @@ func lexInsideOutput(l *Lexer) stateFn {
 	}
 }
 
+func lexRightOutput(l *Lexer) stateFn {
+	l.Cur += len(rightOutput)
+	l.Emit(itemRightOutput)
+	return lexText
+}
+
+func lexInsideOuput(l *Lexer) stateFn {
+	for {
+		if strings.HasPrefix(l.Input[l.Cur:], rightOutput) {
+			if l.LastItem.Val == leftOutput {
+				return l.errorf("empty output: %s %s must not be empty", leftOutput, rightOutput)
+			}
+			dbg("  lexInsideCodeInput: rightCodeInput")
+			return lexRightOutput
+		}
+		switch r := l.Next(); {
+		case r == eof:
+			return l.errorf("EOF: unclosed output: %q must have a closing tag: %q", leftCodeInput, rightCodeInput)
+		case isSpace(r):
+			dbg("  lexInsideCodeInput: isSpace")
+			l.Ignore()
+		case isLetter(r):
+			// check keywords
+			dbg("  lexInsideCodeInput: isLetter")
+			l.Backup()
+			return lexKeyword
+		case isString(r):
+			return lexString
+		case isNumber(r):
+			return lexNumber
+		case isOperator(r):
+			return lexOperator
+		}
+	}
+}
+
 func lexLeftCodeInput(l *Lexer) stateFn {
 	l.Cur += len(leftCodeInput)
 	l.Emit(itemLeftCodeInput)
-	return lexInsideOutput
+	return lexInsideCodeInput
+}
+
+func lexLeftOutput(l *Lexer) stateFn {
+	l.Cur += len(leftOutput)
+	l.Emit(itemLeftCodeInput)
+	return lexInsideOuput
 }
 
 func lexText(l *Lexer) stateFn {
@@ -100,6 +164,12 @@ func lexText(l *Lexer) stateFn {
 				l.Emit(itemText)
 			}
 			return lexLeftCodeInput
+		}
+		if strings.HasPrefix(l.Input[l.Cur:], leftOutput) {
+			if l.Cur > l.Start {
+				l.Emit(itemText)
+			}
+			return lexLeftOutput
 		}
 		if l.Next() == eof {
 			break

@@ -86,3 +86,12 @@ func isOperator(r rune) bool {
 	}
 	return false
 }
+
+// TODO: double quotes for now
+func isString(r rune) bool {
+	return r == '"'
+}
+
+func isNumber(r rune) bool {
+	return unicode.IsNumber(r)
+}

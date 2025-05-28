@@ -8,6 +8,8 @@ const (
 	// tags
 	itemLeftCodeInput ItemType = iota
 	itemRightCodeInput
+	itemLeftOutput
+	itemRightOutput
 
 	// opening tag keywords
 	itemCycle
@@ -68,6 +70,8 @@ const (
 
 	// plain text
 	itemText
+	itemString
+	itemNumber
 )
 
 type Item struct {
