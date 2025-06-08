@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 type Lexer struct {
 	Input      string
 	Start      int
@@ -8,17 +10,16 @@ type Lexer struct {
 	LastItem   Item
 	KeywordMap map[string]ItemType
 	OpMap      map[string]ItemType
-	// output chan
+	tokens     []Item
+	mu         sync.Mutex
 }
 
-// TODO: Rename if package becomes lexer
 func NewLexer(input string) (*Lexer, error) {
 	l := &Lexer{
 		Input:      input,
 		KeywordMap: initKeywordMap(),
 		OpMap:      initOperatorsMap(),
+		tokens:     make([]Item, 0),
 	}
-
-	// call go run()
 	return l, nil
 }

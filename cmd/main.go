@@ -17,11 +17,8 @@ var dbg = func() func(format string, args ...any) {
 }()
 
 func main() {
-
 	var filepath string
-
 	flag.StringVar(&filepath, "file", "", "path to .liquid file")
-
 	flag.Parse()
 
 	logger := log.New(os.Stdout)
@@ -40,8 +37,15 @@ func main() {
 	lexer, err := NewLexer(string(file))
 	if err != nil {
 		logger.Error("main: newLexer: %s", err)
+		os.Exit(1)
 	}
 
-	lexer.Run()
+	// Run the lexer and collect all tokens
+	tokens := lexer.Run()
 
+	// Display results
+	logger.Info("Lexing completed. Tokens found:")
+	for _, token := range tokens {
+		logger.Infof("  %s: %s", token.TypeString(), token.String())
+	}
 }

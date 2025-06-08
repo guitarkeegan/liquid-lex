@@ -5,13 +5,14 @@ import "fmt"
 type ItemType int
 
 const (
-	// tags
+	// Basic symbols
 	itemLeftCodeInput ItemType = iota
 	itemRightCodeInput
 	itemLeftOutput
 	itemRightOutput
+	itemDot
 
-	// opening tag keywords
+	// Opening tag keywords
 	itemCycle
 	itemRender
 	itemRaw
@@ -33,7 +34,7 @@ const (
 	itemDoc
 	itemLiquid
 
-	// closing tag keywords
+	// Closing tag keywords
 	itemEndraw
 	itemEndComment
 	itemEndunless
@@ -44,7 +45,7 @@ const (
 	itemEndtablerow
 	itemEndifchanged
 
-	// case/conditional keywords
+	// Conditional keywords
 	itemWhen
 	itemElse
 	itemElsif
@@ -53,6 +54,7 @@ const (
 	itemLogicalAnd
 	itemContains
 
+	// Operators
 	itemEquals
 	itemAssignEquals
 	itemDoesNotEqual
@@ -61,22 +63,78 @@ const (
 	itemGreaterThanOrEqualTo
 	itemLessThanOrEqualTo
 
-	// outside of map
-	itemVar // escape hatch for vars
-
-	// end of file
-	itemEOF
-	itemError
-
-	// plain text
+	// Variables and literals
+	itemVar
 	itemText
 	itemString
 	itemNumber
+
+	// Special tokens
+	itemEOF
+	itemError
 )
+
+var itemTypeNames = map[ItemType]string{
+	itemLeftCodeInput:        "LEFT_CODE_INPUT",
+	itemRightCodeInput:       "RIGHT_CODE_INPUT",
+	itemLeftOutput:           "LEFT_OUTPUT",
+	itemRightOutput:          "RIGHT_OUTPUT",
+	itemDot:                  "DOT",
+	itemCycle:                "CYCLE",
+	itemRender:               "RENDER",
+	itemRaw:                  "RAW",
+	itemComment:              "COMMENT",
+	itemIncrement:            "INCREMENT",
+	itemUnless:               "UNLESS",
+	itemDecrement:            "DECREMENT",
+	itemCapture:              "CAPTURE",
+	itemContinue:             "CONTINUE",
+	itemInclude:              "INCLUDE",
+	itemCase:                 "CASE",
+	itemIfchanged:            "IFCHANGED",
+	itemAssign:               "ASSIGN",
+	itemFor:                  "FOR",
+	itemBreak:                "BREAK",
+	itemIf:                   "IF",
+	itemEcho:                 "ECHO",
+	itemTablerow:             "TABLEROW",
+	itemDoc:                  "DOC",
+	itemLiquid:               "LIQUID",
+	itemEndraw:               "ENDRAW",
+	itemEndComment:           "ENDCOMMENT",
+	itemEndunless:            "ENDUNLESS",
+	itemEndcapture:           "ENDCAPTURE",
+	itemEndcase:              "ENDCASE",
+	itemEndfor:               "ENDFOR",
+	itemEndif:                "ENDIF",
+	itemEndtablerow:          "ENDTABLEROW",
+	itemEndifchanged:         "ENDIFCHANGED",
+	itemWhen:                 "WHEN",
+	itemElse:                 "ELSE",
+	itemElsif:                "ELSIF",
+	itemElseif:               "ELSEIF",
+	itemLogicalOr:            "OR",
+	itemLogicalAnd:           "AND",
+	itemContains:             "CONTAINS",
+	itemEquals:               "EQUALS",
+	itemAssignEquals:         "ASSIGN_EQUALS",
+	itemDoesNotEqual:         "NOT_EQUALS",
+	itemGreaterThan:          "GREATER_THAN",
+	itemLessThan:             "LESS_THAN",
+	itemGreaterThanOrEqualTo: "GREATER_THAN_OR_EQUAL",
+	itemLessThanOrEqualTo:    "LESS_THAN_OR_EQUAL",
+	itemVar:                  "VARIABLE",
+	itemText:                 "TEXT",
+	itemString:               "STRING",
+	itemNumber:               "NUMBER",
+	itemEOF:                  "EOF",
+	itemError:                "ERROR",
+}
 
 type Item struct {
 	Typ ItemType
 	Val string
+	Pos int // Position in input for better error reporting
 }
 
 func (i Item) String() string {
@@ -90,4 +148,11 @@ func (i Item) String() string {
 		return fmt.Sprintf("%.10q...", i.Val)
 	}
 	return fmt.Sprintf("%q", i.Val)
+}
+
+func (i Item) TypeString() string {
+	if name, ok := itemTypeNames[i.Typ]; ok {
+		return name
+	}
+	return fmt.Sprintf("UNKNOWN(%d)", int(i.Typ))
 }

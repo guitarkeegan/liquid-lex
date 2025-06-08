@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// Helpers
 func (l *Lexer) Next() rune {
 	dbg("Next")
 	if l.Cur >= len(l.Input) {
@@ -54,44 +53,57 @@ func (l *Lexer) AcceptRun(valid string) {
 }
 
 func (l *Lexer) errorf(format string, args ...any) stateFn {
-	// TODO: send to items chan
 	item := Item{
-		itemError,
-		fmt.Sprintf(format, args...),
+		Typ: itemError,
+		Val: fmt.Sprintf(format, args...),
+		Pos: l.Start,
 	}
 
-	log.Errorf("%s\n", item.Val)
+	l.mu.Lock()
+	l.tokens = append(l.tokens, item)
+	l.mu.Unlock()
+
+	log.Errorf("Error at position %d: %s", l.Start, item.Val)
 	return nil
+}
+
+func (l *Lexer) Emit(it ItemType) {
+	item := Item{
+		Typ: it,
+		Val: l.Input[l.Start:l.Cur],
+		Pos: l.Start,
+	}
+
+	l.mu.Lock()
+	l.tokens = append(l.tokens, item)
+	l.mu.Unlock()
+
+	dbg("Emit: %+v", item)
+	l.LastItem = item
+	l.Start = l.Cur
 }
 
 func isSpace(r rune) bool {
 	return unicode.IsSpace(r)
 }
 
-// emit item to chan, reset start of next item
-func (l *Lexer) Emit(it ItemType) {
-	// TODO send to chan
-	log.Infof("Emit: %+v", Item{it, l.Input[l.Start:l.Cur]})
-	l.LastItem.Val = l.Input[l.Start:l.Cur]
-	l.LastItem.Typ = it
-	l.Start = l.Cur
-}
-
 func isOperator(r rune) bool {
-	runeArr := [4]rune{'=', '>', '<', '!'}
-	for _, rn := range runeArr {
-		if rn == r {
-			return true
-		}
-	}
-	return false
+	operators := "=><!"
+	return strings.ContainsRune(operators, r)
 }
 
-// TODO: double quotes for now
 func isString(r rune) bool {
-	return r == '"'
+	return r == '"' || r == '\''
 }
 
 func isNumber(r rune) bool {
 	return unicode.IsNumber(r)
+}
+
+func isDot(r rune) bool {
+	return r == '.'
+}
+
+func isLetter(r rune) bool {
+	return unicode.IsLetter(r) || r == '_'
 }

@@ -15,11 +15,12 @@ const (
 	rightCodeInput      = "%}"
 	leftOutput          = "{{"
 	rightOutput         = "}}"
+	dot                 = "."
 	eof            rune = -1
 )
 
+// Operators
 const (
-	// basic operators
 	equals               = "=="
 	assignEquals         = "="
 	doesNotEqual         = "!="
@@ -29,8 +30,8 @@ const (
 	lessThanOrEqualTo    = "<="
 )
 
+// Keywords - Opening tags
 const (
-	// Opening tags
 	cycle     = "cycle"
 	render    = "render"
 	raw       = "raw"
@@ -51,8 +52,10 @@ const (
 	tablerow  = "tablerow"
 	doc       = "doc"
 	liquid    = "liquid"
+)
 
-	// Closing tags
+// Keywords - Closing tags
+const (
 	endraw       = "endraw"
 	endcomment   = "endcomment"
 	endunless    = "endunless"
@@ -62,8 +65,10 @@ const (
 	endif        = "endif"
 	endtablerow  = "endtablerow"
 	endifchanged = "endifchanged"
+)
 
-	// Case/conditional alternatives
+// Keywords - Conditional/flow control
+const (
 	when       = "when"
 	else_      = "else"
 	elsif      = "elsif"
@@ -109,7 +114,7 @@ func initKeywordMap() map[string]ItemType {
 	kwMap[endtablerow] = itemEndtablerow
 	kwMap[endifchanged] = itemEndifchanged
 
-	// Case/conditional alternatives
+	// Conditional/flow control
 	kwMap[when] = itemWhen
 	kwMap[else_] = itemElse
 	kwMap[elsif] = itemElsif
